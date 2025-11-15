@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BOBBILI NAGENDRA — Smoke Portfolio</title>
+  <meta name="description" content="Artistic soft-smoke-simulation portfolio for BOBBILI NAGENDRA. Real-time soft-smoke follows cursor; text reveals through animated gaps." />
+  <style>
+    :root{--bg:#06060a;--accent:#9be7ff;--accent2:#c08bff;--muted:rgba(255,255,255,0.78)}
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:#fff;overflow-x:hidden}
+
+    /* full-canvas soft-smoke */
+    canvas#soft-smoke{position:fixed;inset:0;z-index:0;display:block}
+
+    /* content above soft-smoke */
+    .wrap{position:relative;z-index:6;min-height:100vh;display:flex;flex-direction:column}
+    header{height:92vh;display:flex;align-items:center;justify-content:center;padding:32px;text-align:center}
+    .brand{position:fixed;left:20px;top:18px;font-weight:700;color:var(--accent)}
+    nav{position:fixed;right:20px;top:18px;display:flex;gap:14px}
+    nav a{color:var(--muted);text-decoration:none;font-weight:600}
+
+    /* Hero text - will appear through soft-smoke gaps via subtle animation */
+    .hero{max-width:1100px;margin:auto;position:relative;z-index:4}
+    .hero h1{font-size:clamp(36px,8vw,72px);line-height:1.02;margin:0;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:0.5px}
+    .reveal-mask{position:relative;display:inline-block}
+    .reveal-mask::after{content:'';position:absolute;inset:0;background:transparent;pointer-events:none}
+    .lead{color:var(--muted);margin-top:14px;font-size:18px}
+    .cta{margin-top:22px}
+    .btn{padding:10px 16px;border-radius:999px;border:1px solid rgba(255,255,255,0.04);background:linear-gradient(90deg,rgba(155,231,255,0.06),rgba(192,139,255,0.06));color:var(--accent);font-weight:700;text-decoration:none}
+
+    /* sections */
+    section{padding:84px 8%;display:flex;flex-direction:column;align-items:center;gap:18px}
+    .panel{width:100%;max-width:1100px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.04);padding:28px;border-radius:14px;backdrop-filter:blur(6px);position:relative;z-index:4}
+
+    /* skills layout */
+    .skills-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+    .skill-box{padding:12px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03)}
+    .skill-title{font-weight:700;margin-bottom:8px}
+
+    /* projects */
+    .projects-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:12px}
+    .proj{padding:14px;border-radius:12px;background:rgba(0,0,0,0.28);border:1px solid rgba(255,255,255,0.03)}
+
+    /* contact */
+    .contact-list{display:flex;flex-direction:column;gap:8px}
+    .chip{display:inline-block;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.04);font-weight:700}
+
+    footer{padding:28px;text-align:center;color:var(--muted);position:relative;z-index:4}
+
+    /* cursor glow */
+    .cursor{position:fixed;left:0;top:0;width:28px;height:28px;border-radius:50%;pointer-events:none;filter:blur(8px);mix-blend-mode:screen;z-index:5;opacity:0.95}
+
+    @media (max-width:900px){.skills-grid{grid-template-columns:1fr}header{padding:20px}.hero h1{font-size:clamp(28px,10vw,48px)}}
+  .contact-panel{display:flex;flex-direction:column;gap:24px}
+
+/* Modern Glass + Neon Query Form */
+.query-form{width:100%;max-width:600px;margin-top:20px;padding:24px;border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);backdrop-filter:blur(12px);box-shadow:0 0 22px rgba(155,231,255,0.15);animation:floatUp 0.7s ease}
+.query-form h3{margin:0 0 10px;font-size:22px;color:var(--accent)}
+.query-form input,.query-form textarea{width:100%;padding:12px 14px;margin-top:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#fff;font-size:15px;transition:0.25s}
+.query-form input:focus,.query-form textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 12px var(--accent2)}
+.send-btn{margin-top:14px;padding:12px 20px;width:100%;border-radius:10px;border:none;font-weight:700;font-size:16px;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#000;cursor:pointer;transition:0.25s}
+.send-btn:hover{transform:translateY(-2px);box-shadow:0 0 14px var(--accent2)}
+@keyframes floatUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+</style>
+</head>
+<body>
+
+<canvas id="soft-smoke"></canvas>
+<div class="cursor" id="cursor" style="background:radial-gradient(circle,var(--accent),transparent 40%);display:none"></div>
+
+<div class="wrap">
+  <div class="brand">BOBBILI NAGENDRA</div>
+  <nav><a href="#about">About</a><a href="#skills">Skills</a><a href="#projects">Projects</a><a href="#contact">Contact</a></nav>
+
+  <header>
+    <div class="hero">
+      <h1 class="reveal-mask">BOBBILI NAGENDRA</h1>
+      <p class="lead">Full Stack Developer & Designer — I craft immersive, animated web applications. I adapt quickly, enjoy teamwork, and continuously learn new technologies.</p>
+      <div class="cta">
+        <a class="btn" href="#projects">View Projects</a>
+        <a class="btn" style="margin-left:12px" href="#contact">Contact Me</a>
+      </div>
+    </div>
+  </header>
+
+  <section id="about">
+    <div class="panel">
+      <h2>About Me</h2>
+      <p>I am a quick adaptive person, enjoy working with teammates, and have strong respect for work. I engage deeply and love learning new technologies including HTML, CSS, JavaScript, and Spring Boot. I completed Full Stack Development certification at Skill D-Zire.</p>
+    </div>
+  </section>
+
+  <section id="skills">
+    <div class="panel">
+      <h2>Skills</h2>
+      <div class="skills-grid">
+        <div class="skill-box">
+          <div class="skill-title">Front-End</div>
+          <div>HTML<br>CSS<br>CSS Animations<br>JavaScript<br>React</div>
+        </div>
+        <div class="skill-box">
+          <div class="skill-title">Back-End</div>
+          <div>Spring Boot<br>Node.js<br>SQL</div>
+        </div>
+        <div class="skill-box">
+          <div class="skill-title">Other Tools</div>
+          <div>VS Code<br>GitHub</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="projects">
+    <div class="panel">
+      <h2>Projects</h2>
+      <div class="projects-grid">
+        <div class="proj">
+          <h3>Full Stack Development Project (Skill D-Zire)</h3>
+          <p>End-to-end project including frontend, backend and database integration completed during Full Stack Development certification.</p>
+        </div>
+        <div class="proj">
+          <h3>Interactive star map</h3>
+          <p>UI experiment using Canvas/Three.js for an interactive background.</p>
+        </div>
+        <div class="proj">
+          <h3>Animated Landing</h3>
+          <p>Landing page with motion design and smooth transitions.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="panel contact-panel">
+      <h2>Contact</h2>
+      <div class="contact-list">
+        <a class="chip" href="mailto:bobbilinagendra629@gmail.com">bobbilinagendra629@gmail.com</a>
+        <a class="chip" href="https://www.linkedin.com/in/nagendra-bobbili-690a702a0" target="_blank">LinkedIn</a>
+        <a class="chip" href="https://github.com/nagendrabobbili" target="_blank">GitHub</a>
+      </div>
+
+      <!-- Modern Glass + Neon Query Form -->
+      <form class="query-form" onsubmit="event.preventDefault(); alert('Message sent successfully! (Demo)'); this.reset();">
+        <h3>Send a Message</h3>
+        <input type="text" placeholder="Your Name" required>
+        <input type="email" placeholder="Your Email" required>
+        <textarea placeholder="Your Message" rows="4" required></textarea>
+        <button type="submit" class="send-btn">Send Message</button>
+      </form>
+    </div>
+  </section>
+
+  <footer>© 2025 BOBBILI NAGENDRA • Full Stack Developer</footer>
+</div>
+
+<script>
+/* Smoke simulation (canvas) + cursor interaction
+   - soft soft-smoke generated from multiple particle layers
+   - particles move and blur to create soft-smoke illusion
+   - cursor produces stronger emission and repels nearby particles
+*/
+const canvas = document.getElementById('soft-smoke');
+const ctx = canvas.getContext('2d');
+let W = canvas.width = innerWidth;
+let H = canvas.height = innerHeight;
+
+window.addEventListener('resize', ()=>{ W = canvas.width = innerWidth; H = canvas.height = innerHeight; initEmitters(); });
+
+// cursor
+const cursor = document.getElementById('cursor');
+const mouse = {x: W/2, y: H/2, down: false, active:false};
+window.addEventListener('pointermove', (e)=>{ mouse.x = e.clientX; mouse.y = e.clientY; mouse.active = true; cursor.style.display='block'; cursor.style.left = (mouse.x-14)+'px'; cursor.style.top = (mouse.y-14)+'px'; });
+window.addEventListener('pointerdown', ()=>{ mouse.down = true; }); window.addEventListener('pointerup', ()=>{ mouse.down = false; });
+window.addEventListener('pointerleave', ()=>{ mouse.active = false; cursor.style.display='none'; });
+
+// particles and emitters
+const emitters = [];
+const PARTICLE_COUNT = 140; // total soft particles
+function initEmitters(){ emitters.length = 0; for(let i=0;i<3;i++){ emitters.push({x:W/2,y:H/2,rate:PARTICLE_COUNT/3,life:200+Math.random()*120}); } }
+initEmitters();
+
+const particles = [];
+function spawnParticle(x,y,spread=80){
+  const angle = Math.random()*Math.PI*2;
+  const speed = Math.random()*0.6 + 0.2;
+  const vx = Math.cos(angle)*speed;
+  const vy = Math.sin(angle)*speed - 0.1;
+  particles.push({x:x + (Math.random()-0.5)*spread, y:y + (Math.random()-0.5)*spread, vx, vy, life: 120 + Math.random()*160, r: 30 + Math.random()*60, alpha: 0.06 + Math.random()*0.12, hue: 220 + Math.random()*80});
+}
+
+// initial fog
+for(let i=0;i<PARTICLE_COUNT;i++){ spawnParticle(Math.random()*W, Math.random()*H, 300); }
+
+function step(){
+  // emit near cursor gently
+  if(mouse.active){ for(let i=0;i< (mouse.down?6:2); i++) spawnParticle(mouse.x, mouse.y, mouse.down?40:80); }
+  // gentle random emissions
+  if(Math.random() < 0.6){ const e = emitters[Math.floor(Math.random()*emitters.length)]; spawnParticle(e.x + (Math.random()-0.5)*200, e.y + (Math.random()-0.5)*200, 180); }
+
+  // update particles
+  for(let i=particles.length-1;i>=0;i--){ const p = particles[i]; p.x += p.vx; p.y += p.vy; p.vx += (Math.random()-0.5)*0.02; p.vy -= 0.0008; p.life--; p.alpha *= 0.998; if(p.life <= 0 || p.alpha < 0.006) particles.splice(i,1); }
+  // cap total
+  if(particles.length > 700) particles.splice(0, particles.length-600);
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  // subtle background
+  const g = ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#05060a'); g.addColorStop(1,'#07060f'); ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+
+  // draw soft-smoke particles with additive/blurry style
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for(let i=0;i<particles.length;i++){
+    const p = particles[i];
+    const s = Math.max(0.2, p.r * (p.life/200) * 0.02);
+    const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, s*40);
+    grad.addColorStop(0, `hsla(${p.hue},70%,65%,${p.alpha})`);
+    grad.addColorStop(0.25, `hsla(${p.hue},70%,60%,${p.alpha*0.25})`);
+    grad.addColorStop(1, 'rgba(2,6,23,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(p.x, p.y, s*40, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+
+  // subtle noise overlay (soften edges)
+  ctx.fillStyle = 'rgba(0,0,0,0.02)'; ctx.fillRect(0,0,W,H);
+}
+
+// animation loop
+function loop(){ step(); draw(); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+
+// section reveal animations (text appears through soft-smoke gaps simulated by CSS visibility)
+const anchors = document.querySelectorAll('nav a'); anchors.forEach(a=>a.addEventListener('click', (e)=>{ e.preventDefault(); document.querySelector(a.getAttribute('href')).scrollIntoView({behavior:'smooth'}); }));
+
+// small accessibility: keyboard nav
+window.addEventListener('keydown', (e)=>{ if(e.key === 'ArrowDown') window.scrollBy({top: window.innerHeight*0.9, behavior:'smooth'}); if(e.key === 'ArrowUp') window.scrollBy({top: -window.innerHeight*0.9, behavior:'smooth'}); });
+
+</script>
+</body>
+</html>
